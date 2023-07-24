@@ -1,26 +1,38 @@
-import querystring from 'querystring';
+import querystring from "querystring";
 import { NextResponse, NextRequest } from "next/server";
 
-async function handler(req: NextRequest, context: any) {
-  let body = "";
+async function readBody(req: NextRequest) {
+  try {
+    console.log("reading body as FormData");
+    const data = await req.clone().formData();
+    let json: Record<string, FormDataEntryValue> = {};
+    for (const [key, value] of data) {
+      json[key] = value;
+    }
+    return json;
+  } catch (err) {
+    console.log("cannot read body as FormData");
+  }
 
   try {
     console.log("reading body as JSON");
-    body = await req.json();
-  } catch (err) {
+    return await req.clone().json();
+  } catch (_) {
     console.log("cannot read body as JSON");
   }
 
-  if (!body) {
-    try {
-      console.log("reading body as text");
-      const body = await req.text();
-
-      console.log("body: ", body);
-    } catch (_) {
-      console.log("cannot read body as text");
-    }
+  try {
+    console.log("reading body as text");
+    await req.clone().text();
+  } catch (_) {
+    console.log("cannot read body as text");
   }
+
+  return "";
+}
+
+async function handler(req: NextRequest) {
+  let body = await readBody(req);
 
   let requestHeaders = new Headers(req.headers);
   let headers: any = {};
