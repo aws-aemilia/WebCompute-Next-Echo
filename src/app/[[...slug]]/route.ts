@@ -31,15 +31,28 @@ async function readBody(req: NextRequest) {
   return "";
 }
 
-async function handler(req: NextRequest) {
-  let body = await readBody(req);
+function isImage(contentType: string | null) {
+  return contentType && contentType.startsWith("image/");
+}
 
+async function handler(req: NextRequest) {
   let requestHeaders = new Headers(req.headers);
   let headers: any = {};
+
+  if (isImage(requestHeaders.get("content-type"))) {
+    let body = await req.arrayBuffer();
+    return new NextResponse(body, {
+      headers: {
+        "content-type": requestHeaders.get("content-type") || "",
+      },
+    });
+  }
 
   requestHeaders.forEach((value, key) => {
     headers[key] = value;
   });
+
+  let body = await readBody(req);
 
   const url = new URL(req.url);
   const queryParams = querystring.parse(url.search.slice(1));
