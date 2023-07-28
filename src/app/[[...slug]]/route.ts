@@ -16,14 +16,17 @@ async function readBody(req: NextRequest) {
 
   try {
     console.log("reading body as JSON");
-    return await req.clone().json();
+    let json = await req.clone().json();
+    return json;
   } catch (_) {
     console.log("cannot read body as JSON");
   }
 
   try {
     console.log("reading body as text");
-    await req.clone().text();
+    let text = await req.clone().text();
+    console.log("text:", text)
+    return text;
   } catch (_) {
     console.log("cannot read body as text");
   }
@@ -40,6 +43,8 @@ async function handler(req: NextRequest) {
   let headers: any = {};
 
   if (isImage(requestHeaders.get("content-type"))) {
+    console.log("handling image data");
+
     let body = await req.arrayBuffer();
     return new NextResponse(body, {
       headers: {
